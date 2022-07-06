@@ -8,6 +8,9 @@ AWS_REGION ?= us-west-2
 AWS_STACK_NAME ?= demoapps
 AWS_APP_NAME ?= nodejs-demoapp
 
+# Used by `multiarch-*` targets
+PLATFORMS ?= linux/arm64,linux/amd64
+
 # Used by `test-api` target
 TEST_HOST ?= localhost:3000
 
@@ -32,6 +35,17 @@ image: ## 🔨 Build container image from Dockerfile
 
 push: ## 📤 Push container image to registry 
 	docker push $(IMAGE_REG)/$(IMAGE_REPO):$(IMAGE_TAG)
+
+multiarch-image: ## 🔨 Build multi-arch container image from Dockerfile 
+	docker buildx build . --file build/Dockerfile \
+	--platform $(PLATFORMS) \
+	--tag $(IMAGE_REG)/$(IMAGE_REPO):$(IMAGE_TAG)
+
+multiarch-push: ## 📤 Build and push multi-arch container image to registry 
+	docker buildx build . --file build/Dockerfile \
+	--platform $(PLATFORMS) \
+	--tag $(IMAGE_REG)/$(IMAGE_REPO):$(IMAGE_TAG) \
+	--push
 
 run: $(SRC_DIR)/node_modules ## 🏃 Run locally using Node.js
 	cd $(SRC_DIR); npm run watch
