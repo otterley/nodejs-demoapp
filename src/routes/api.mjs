@@ -9,7 +9,6 @@ const router = express.Router()
 import os from 'os'
 import fs from 'fs'
 import axios from 'axios'
-import appInsights from 'applicationinsights'
 
 // =======================================================================
 // Get weather data as JSON
@@ -26,9 +25,9 @@ router.get('/api/weather/:lat/:long', async function (req, res, next) {
     )
 
     if (weatherResp.data) {
-      if (appInsights.defaultClient && weatherResp.data.main) {
-        appInsights.defaultClient.trackMetric({ name: 'weatherTemp', value: weatherResp.data.main.temp })
-      }
+      //if (appInsights.defaultClient && weatherResp.data.main) {
+      //  appInsights.defaultClient.trackMetric({ name: 'weatherTemp', value: weatherResp.data.main.temp })
+      //}
 
       // Proxy the OpenWeather response through to the caller
       res.status(200).send(weatherResp.data)

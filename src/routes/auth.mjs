@@ -1,8 +1,10 @@
 //
 // Routes used by login and account screen
 // ---------------------------------------------
-// Ben C, Nov 2020 - Updated Nov 2021
+// Ben C, Nov 2020 - Updated Jul 2022 by Michael Fischer
 //
+
+// TODO: Update to use Cognito
 
 import express from 'express'
 const router = express.Router()

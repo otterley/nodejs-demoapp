@@ -8,7 +8,6 @@
 import express from 'express'
 const router = express.Router()
 import { MongoClient, ObjectId } from 'mongodb'
-import appInsights from 'applicationinsights'
 
 const DBNAME = process.env.TODO_MONGO_DB || 'todoDb'
 const COLLECTION = 'todos'
@@ -27,9 +26,7 @@ let db
     db = client.db(DBNAME)
     console.log('### ✅ Enabled Todo app. Connected to MongoDB!')
   } catch (err) {
-    if (appInsights.defaultClient) {
-      appInsights.defaultClient.trackException({ exception: err })
-    }
+    // TODO: Track exception via AWS X-Ray
     console.log(`### 💥 ERROR! ${err.toString()}`)
   }
 })()
@@ -123,10 +120,7 @@ function sendError(res, err, code = 500) {
     statuscode = err.code
   }
 
-  // App Insights
-  if (appInsights.defaultClient) {
-    appInsights.defaultClient.trackException({ exception: err })
-  }
+  // TODO: Track exception via AWS X-Ray
 
   res.status(statuscode).send(err)
   return
@@ -136,10 +130,7 @@ function sendError(res, err, code = 500) {
 // Helper to send JSON response
 //
 function sendData(res, data) {
-  // App Insights
-  if (appInsights.defaultClient) {
-    appInsights.defaultClient.trackEvent({ name: 'dataEvent', properties: { data: JSON.stringify(data) } })
-  }
+  // TODO: Track event via CloudWatch or X-Ray
 
   res.type('application/json')
   res.status(200).send(data)

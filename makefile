@@ -1,12 +1,12 @@
 # Used by `image`, `push` & `deploy` targets, override as required
-IMAGE_REG ?= ghcr.io
-IMAGE_REPO ?= benc-uk/nodejs-demoapp
+IMAGE_REG ?= 749049578452.dkr.ecr.us-west-2.amazonaws.com
+IMAGE_REPO ?= nodejs-demoapp
 IMAGE_TAG ?= latest
 
-# Used by `deploy` target, sets Azure deployment defaults, override as required
-AZURE_RES_GROUP ?= demoapps
-AZURE_REGION ?= northeurope
-AZURE_APP_NAME ?= nodejs-demoapp
+# Used by `deploy` target, sets AWS deployment defaults, override as required
+AWS_REGION ?= us-west-2
+AWS_STACK_NAME ?= demoapps
+AWS_APP_NAME ?= nodejs-demoapp
 
 # Used by `test-api` target
 TEST_HOST ?= localhost:3000
@@ -36,17 +36,15 @@ push: ## 📤 Push container image to registry
 run: $(SRC_DIR)/node_modules ## 🏃 Run locally using Node.js
 	cd $(SRC_DIR); npm run watch
 	
-deploy: ## 🚀 Deploy to Azure Container App 
-	az group create --resource-group $(AZURE_RES_GROUP) --location $(AZURE_REGION) -o table
-	az deployment group create --template-file deploy/container-app.bicep \
-		--resource-group $(AZURE_RES_GROUP) \
-		--parameters appName=$(AZURE_APP_NAME) \
-		--parameters image=$(IMAGE_REG)/$(IMAGE_REPO):$(IMAGE_TAG) -o table 
-	@echo "### 🚀 App deployed & available here: $(shell az deployment group show --resource-group $(AZURE_RES_GROUP) --name container-app --query "properties.outputs.appURL.value" -o tsv)/"
+deploy: ## 🚀 Deploy to AWS App Runner
+	@echo "### 🚫 Not implemented yet"
+	@false
+#   @echo "### 🚀 App deployed & available here: ... "
 
-undeploy: ## 💀 Remove from Azure 
-	@echo "### WARNING! Going to delete $(AZURE_RES_GROUP) 😲"
-	az group delete -n $(AZURE_RES_GROUP) -o table --no-wait
+undeploy: ## 💀 Remove from AWS 
+	@echo "### 🚫 Not implemented yet"
+	@false
+#   @echo "### WARNING! Going to delete $(AWS_STACK_NAME) 😲"
 
 test: $(SRC_DIR)/node_modules ## 🎯 Unit tests with Mocha
 	cd $(SRC_DIR); npm run test

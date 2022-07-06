@@ -1,7 +1,7 @@
 //
 // HTML page routes, that render ejs templates
 // --------------------------------------------------
-// Ben C, Jan 2020
+// Ben C, Jan 2020 - Updated Jul 2022 by Michael Fischer
 //
 
 import express from 'express'
@@ -112,7 +112,7 @@ router.get('/tools/load', function (req, res, next) {
 })
 
 // =======================================================================
-// Page to generate server side errors, good for App Insights demos
+// Page to generate server side errors, good for X-Ray demos
 // =======================================================================
 // eslint-disable-next-line no-unused-vars
 router.get('/tools/error', function (req, res, next) {

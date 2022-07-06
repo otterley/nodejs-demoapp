@@ -4,16 +4,16 @@ This is a simple Node.js web app using the Express framework and EJS templates.
 
 The app has been designed with cloud native demos & containers in mind, in order to provide a real working application for deployment, something more than "hello-world" but with the minimum of pre-reqs. It is not intended as a complete example of a fully functioning architecture or complex software design.
 
-Typical uses would be deployment to Kubernetes, demos of Docker, CI/CD (build pipelines are provided), deployment to cloud (Azure) monitoring, auto-scaling
+Typical uses would be deployment to Kubernetes, demos of Docker, CI/CD (build pipelines are provided), deployment to cloud (AWS) monitoring, auto-scaling
 
 The app has several basic pages accessed from the top navigation menu, some of which are only lit up when certain configuration variables are set (see 'Optional Features' below):
 
 - **'Info'** - Will show system & runtime information, and will also display if the app is running from within a Docker container and Kubernetes.
-- **'Tools'** - Some tools useful in demos, such a forcing CPU load (for autoscale demos), and error/exception pages for use with App Insights or other monitoring tool.
+- **'Tools'** - Some tools useful in demos, such a forcing CPU load (for autoscale demos), and error/exception pages for use with AWS X-Ray or other monitoring tool.
 - **'Monitor'** - Display realtime monitoring data, showing memory usage/total and process CPU load.
 - **'Weather'** - (Optional) Gets the location of the client page (with HTML5 Geolocation). The resulting location is used to fetch weather data from the [OpenWeather](https://openweathermap.org/) API
 - **'Todo'** - (Optional) This is a small todo/task-list app which uses MongoDB as a database.
-- **'User Account'** - (Optional) When configured with Azure AD (application client id and secret) user login button will be enabled, and an user-account details page enabled, which calls the Microsoft Graph API
+- **'User Account'** - (Optional) When configured with Amazon Cognito, a user login button will be enabled, and an user-account details page enabled.
 
 ![screen](https://user-images.githubusercontent.com/14982936/55620043-dfe96480-5791-11e9-9746-3b42a3a41e5f.png)
 ![screen](https://user-images.githubusercontent.com/14982936/55620045-dfe96480-5791-11e9-94f3-6d788ed447c1.png)
@@ -34,7 +34,7 @@ Live instance:
 - Be using Linux, WSL or MacOS, with bash, make etc
 - [Node.js](https://nodejs.org/en/) - for running locally, linting, running tests etc
 - [Docker](https://docs.docker.com/get-docker/) - for running as a container, or building images
-- [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-linux) - for deployment to Azure
+- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) - for deployment to AWS
 
 Clone the project to any directory where you do development work
 
@@ -55,8 +55,8 @@ lint-fix             📜 Lint & format, will try to fix errors and modify code
 image                🔨 Build container image from Dockerfile
 push                 📤 Push container image to registry
 run                  🏃 Run locally using Node.js
-deploy               🚀 Deploy to Azure Container App
-undeploy             💀 Remove from Azure
+deploy               🚀 Deploy to Amazon ECS
+undeploy             💀 Remove from AWS
 test                 🎯 Unit tests with Jest
 test-report          🤡 Unit tests with Jest & Junit output
 test-api             🚦 Run integration API tests, server must be running
@@ -67,11 +67,11 @@ Make file variables and default values, pass these in when calling `make`, e.g. 
 
 | Makefile Variable | Default                |
 | ----------------- | ---------------------- |
-| IMAGE_REG         | ghcr<span>.</span>io   |
-| IMAGE_REPO        | benc-uk/nodejs-demoapp |
+| IMAGE_REG         | _none_                 |
+| IMAGE_REPO        | nodejs-demoapp         |
 | IMAGE_TAG         | latest                 |
-| AZURE_RES_GROUP   | demoapps               |
-| AZURE_REGION      | northeurope            |
+| AWS_STACK_NAME    | demoapps               |
+| AWS_REGION        | us-west-2              |
 
 Web app will be listening on the standard Express port of 3000, but this can be changed by setting the `PORT` environmental variable.
 
@@ -101,13 +101,13 @@ A set of GitHub Actions workflows are included for CI / CD. Automated builds for
 
 The app will start up and run with zero configuration, however the only features that will be available will be the INFO and TOOLS views. The following optional features can be enabled:
 
-### Application Insights
+### AWS X-Ray
 
-Enable this by setting `APPLICATIONINSIGHTS_CONNECTION_STRING`
+🚧 Coming soon.
 
-The app has been instrumented with the Application Insights SDK, it will however need to be configured to point to your App Insights instance/workspace. All requests will be tracked, as well as dependant calls to MongoDB or other APIs (if configured), exceptions & error will also be logged
+The app has been instrumented with the AWS X-Ray SDK. All requests will be tracked, as well as dependant calls to MongoDB or other APIs (if configured), exceptions & error will also be logged.
 
-[This article](https://docs.microsoft.com/azure/application-insights/app-insights-nodejs) has more information on monitoring Node.js with App Insights
+[This article](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-nodejs.html) has more information on monitoring Node.js with AWS X-Ray.
 
 ### Weather Details
 
@@ -116,15 +116,11 @@ Enable this by setting `WEATHER_API_KEY`
 This will require a API key from OpenWeather, you can [sign up for free and get one here](https://openweathermap.org/price). The page uses a browser API for geolocation to fetch the user's location.  
 However, the `geolocation.getCurrentPosition()` browser API will only work when the site is served via HTTPS or from localhost. As a fallback, weather for London, UK will be show if the current position can not be obtained
 
-### User Authentication with Azure AD
+### User Authentication with Amazon Cognito
 
-Enable this by setting `AAD_APP_ID`, `AAD_APP_SECRET`
+🚧 Coming soon.
 
-This uses [Microsoft Authentication Library (MSAL) for Node](https://github.com/AzureAD/microsoft-authentication-library-for-js/tree/dev/lib/msal-node) to authenticate via MSAL with OIDC and OAuth 2.0. The flow it uses is the "OAuth 2.0 Authorization Code Grant", which is standard for server side (confidential) apps.
-
-In addition the user account page shows details & photo retrieved from the Microsoft Graph API
-
-You will need to register an app in your Azure AD tenant. [See this guide](https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app). Add a secret to your app and use the app's ID & secret value in `AAD_APP_ID` & `AAD_APP_SECRET`. When registering the app for authentication the redirect URL will be the host where the app is running with `/signin` as the URL path, e.g. "https://myapp.azurewebsites.net/signin"
+Enable this by setting `COGNITO_IDENTITY_POOL_ID`.
 
 ### Todo App
 
@@ -138,19 +134,17 @@ You can stand up MongoDB in a container instance or in Cosmos DB (using the Mong
 
 # Configuration
 
-The following configuration environmental variables are supported, however none are mandatory. These can be set directly or when running locally will be picked up from an `.env` file if it is present. A sample `.env` file called `.env.sample` is provided for you to copy
+The following configuration environment variables are supported, however none are mandatory. These can be set directly or when running locally will be picked up from an `.env` file if it is present. A sample `.env` file called `.env.sample` is provided for you to copy
 
-If running in an Azure Web App, all of these values can be injected as application settings in Azure.
+If running in Amazon ECS, all of these values can be injected as container environment variables into the Task Definition.
 
-| Environmental Variable                | Default | Description                                                                      |
+| Environment Variable                  | Default | Description                                                                      |
 | ------------------------------------- | ------- | -------------------------------------------------------------------------------- |
 | PORT                                  | 3000    | Port the server will listen on                                                   |
 | TODO_MONGO_CONNSTR                    | _none_  | Connect to specified MongoDB instance, when set the todo feature will be enabled |
 | TODO_MONGO_DB                         | todoDb  | Name of the database in MongoDB to use (optional)                                |
-| APPLICATIONINSIGHTS_CONNECTION_STRING | _none_  | Enable Application Insights monitoring                                           |
 | WEATHER_API_KEY                       | _none_  | OpenWeather API key. [Info here](https://openweathermap.org/api)                 |
-| AAD_APP_ID                            | _none_  | Application ID of app registered in Azure AD                                     |
-| AAD_APP_SECRET                        | _none_  | Secret / password of app registered in Azure AD                                  |
+| COGNITO_IDENTITY_POOL_ID              | _none_  | Cognito Identity Pool ID                                                          |
 
 ## Deployment
 
@@ -158,6 +152,7 @@ See [deployment folder](./deploy) for deploying into Kubernetes with Helm or int
 
 # Updates
 
+- Jul 2022 - Forked from Ben Coleman's repo and adapted to AWS (Thanks, Ben!)
 - Nov 2021 - Replace DarkSky API with OpenWeather
 - Mar 2021 - Refresh packages and added make + bicep
 - Nov 2020 - Switched to MSAL-Node library for authentication

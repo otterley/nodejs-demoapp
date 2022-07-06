@@ -10,26 +10,7 @@ console.log('### 🚀 Node.js demo app starting...')
 import { config as dotenvConfig } from 'dotenv'
 dotenvConfig()
 
-import appInsights from 'applicationinsights'
-
-// // App Insights. Set APPINSIGHTS_INSTRUMENTATIONKEY as App Setting or env var
-if (process.env.APPLICATIONINSIGHTS_CONNECTION_STRING) {
-  appInsights
-    .setup(process.env.APPLICATIONINSIGHTS_CONNECTION_STRING)
-    .setAutoDependencyCorrelation(true)
-    .setAutoCollectRequests(true)
-    .setAutoCollectPerformance(true, true)
-    .setAutoCollectExceptions(true)
-    .setAutoCollectDependencies(true)
-    .setAutoCollectConsole(true)
-    .setUseDiskRetryCaching(true)
-    .setSendLiveMetrics(false)
-    .setDistributedTracingMode(appInsights.DistributedTracingModes.AI)
-    .start()
-
-  appInsights.start()
-  console.log('### 🩺 Azure App Insights enabled')
-}
+// TODO: Configure AWS X-Ray here
 
 // Core Express & logging stuff
 import express from 'express'
@@ -65,14 +46,15 @@ app.use(express.urlencoded({ extended: false }))
 // Routes & controllers
 import pageRoutes from './routes/pages.mjs'
 import apiRoutes from './routes/api.mjs'
-import authRoutes from './routes/auth.mjs'
+// import authRoutes from './routes/auth.mjs'
 import todoRoutes from './todo/routes.mjs'
 app.use('/', pageRoutes)
 app.use('/', apiRoutes)
 
 // Initialize authentication only when configured
-if (process.env.AAD_APP_ID && process.env.AAD_APP_SECRET) {
-  app.use('/', authRoutes)
+// TODO: Update to use Cognito
+if (process.env.OGNITO_IDENTITY_POOL_ID) {
+  // app.use('/', authRoutes)
 }
 
 // Optional routes based on certain settings/features being enabled
@@ -101,10 +83,7 @@ app.use(function (req, res, next) {
 app.use(function (err, req, res, next) {
   console.error(`### 💥 ERROR: ${err.message}`)
 
-  // App Insights
-  if (appInsights.defaultClient) {
-    appInsights.defaultClient.trackException({ exception: err })
-  }
+  // AWS X-Ray: Collect error here
 
   // Render the error page
   res.status(err.status || 500)
