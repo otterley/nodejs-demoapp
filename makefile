@@ -50,6 +50,11 @@ multiarch-push: ## 📤 Build and push multi-arch container image to registry
 	--tag $(IMAGE_TAG_FULL) \
 	--push
 
+multiarch-manifest: ## 📤 Build and push multi-arch manifest to registry
+	docker manifest create $(IMAGE_TAG_FULL) \
+		$(foreach suffix,$(IMAGE_SUFFIXES),$(IMAGE_TAG_FULL)-$(suffix))
+	docker manifest push $(IMAGE_TAG_FULL)
+
 run: $(SRC_DIR)/node_modules ## 🏃 Run locally using Node.js
 	cd $(SRC_DIR); npm run watch
 

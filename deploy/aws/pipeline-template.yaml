@@ -36,6 +36,11 @@ Resources:
     Properties:
       RetentionInDays: 14
 
+  ManifestBuilderLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+
   CodeBuildRole:
     Type: AWS::IAM::Role
     Properties:
@@ -60,6 +65,7 @@ Resources:
                   Resource:
                     - !GetAtt Arm64BuildLogGroup.Arn
                     - !GetAtt X86BuildLogGroup.Arn
+                    - !GetAtt ManifestBuilderLogGroup.Arn
                 - Effect: Allow
                   Action:
                     - s3:GetObject*
@@ -133,6 +139,41 @@ Resources:
         CloudWatchLogs:
           Status: ENABLED
           GroupName: !Ref X86BuildLogGroup
+
+  ManifestBuilder:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Environment:
+        Type: ARM_CONTAINER
+        Image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        ComputeType: BUILD_GENERAL1_SMALL
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: IMAGE_REG
+            Value: !Select [0, !Split [ "/", !GetAtt ImageRepo.RepositoryUri ]]
+          - Name: IMAGE_SUFFIXES
+            Value: 'x86 arm64'
+      ServiceRole: !Ref CodeBuildRole
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: |-
+          version: 0.2
+          env:
+            shell: bash
+          phases:
+            pre_build:
+              commands:
+                aws ecr get-login-password | docker login -u AWS --password-stdin $IMAGE_REG
+            build:
+              on-failure: ABORT
+              commands:
+                - make multiarch-manifest
+      Artifacts:
+        Type: CODEPIPELINE
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: !Ref ManifestBuilderLogGroup
 
   PipelineRole:
     Type: AWS::IAM::Role
@@ -215,6 +256,19 @@ Resources:
               Version: '1'
             Configuration:
               ProjectName: !Ref X86CodeBuildProject
+              PrimarySource: Source
+            InputArtifacts:
+              - Name: Source
+        - Name: MultiarchManifest
+          Actions:
+          - Name: MultiarchManifest
+            ActionTypeId:
+              Category: Build
+              Owner: AWS
+              Provider: CodeBuild
+              Version: '1'
+            Configuration:
+              ProjectName: !Ref ManifestBuilder
               PrimarySource: Source
             InputArtifacts:
               - Name: Source
