@@ -98,7 +98,7 @@ Resources:
         PrivilegedMode: true
         EnvironmentVariables:
           - Name: IMAGE_REG
-            Value: !Ref ImageRepo
+            Value: !Select [0, !Split [ "/", !GetAtt ImageRepo.RepositoryUri ]]
           - Name: IMAGE_SUFFIX
             Value: arm64
       ServiceRole: !Ref CodeBuildRole
@@ -121,7 +121,7 @@ Resources:
         PrivilegedMode: true
         EnvironmentVariables:
           - Name: IMAGE_REG
-            Value: !Ref ImageRepo
+            Value: !Select [0, !Split [ "/", !GetAtt ImageRepo.RepositoryUri ]]
           - Name: IMAGE_SUFFIX
             Value: x86
       ServiceRole: !Ref CodeBuildRole
