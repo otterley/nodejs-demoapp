@@ -1,0 +1,199 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Build pipeline for nodejs-demoapp
+
+Resources:
+  ArtifactBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      LifecycleConfiguration:
+        Rules:
+          - Status: Enabled
+            ExpirationInDays: 1
+  
+  GitHubConnection:
+    Type: 'AWS::CodeStarConnections::Connection'
+    Properties:
+      ConnectionName: GitHub
+      ProviderType: GitHub
+  
+  ImageRepo:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: nodejs-demoapp
+
+  Arm64BuildLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+  
+  X86BuildLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                codebuild.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: CodeBuild
+          PolicyDocument:
+              Version: 2012-10-17
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource:
+                    - !GetAtt Arm64BuildLogGroup.Arn
+                    - !GetAtt X86BuildLogGroup.Arn
+                - Effect: Allow
+                  Action:
+                    - s3:GetObject*
+                    - s3:PutObject*
+                  Resource:
+                    - !Sub "${ArtifactBucket.Arn}/*"
+                - Effect: Allow
+                  Action:
+                    - codestar-connections:UseConnection
+                  Resource:
+                    - !Ref GitHubConnection
+                - Effect: Allow
+                  Action:
+                    - ecr:BatchGetImage
+                    - ecr:BatchCheckLayerAvailability
+                    - ecr:CompleteLayerUpload
+                    - ecr:GetDownloadUrlForLayer
+                    - ecr:InitiateLayerUpload
+                    - ecr:PutImage
+                    - ecr:UploadLayerPart
+                  Resource:
+                    - !GetAtt ImageRepo.Arn
+                
+  Arm64CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Environment:
+        Type: ARM_CONTAINER
+        Image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        ComputeType: BUILD_GENERAL1_SMALL
+      ServiceRole: !Ref CodeBuildRole
+      Source:
+        Type: CODEPIPELINE
+      Artifacts:
+        Type: CODEPIPELINE
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: !Ref Arm64BuildLogGroup
+    
+  X86CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Environment:
+        Type: LINUX_CONTAINER
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
+        ComputeType: BUILD_GENERAL1_SMALL
+      ServiceRole: !Ref CodeBuildRole
+      Source:
+        Type: CODEPIPELINE
+      Artifacts:
+        Type: CODEPIPELINE
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: !Ref X86BuildLogGroup
+
+  PipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                codepipeline.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+      - PolicyName: CodeBuild
+        PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - codebuild:BatchGetBuilds
+                  - codebuild:StartBuild
+                Resource:
+                  - !GetAtt Arm64CodeBuildProject.Arn
+                  - !GetAtt X86CodeBuildProject.Arn
+              - Effect: Allow
+                Action:
+                  - codestar-connections:UseConnection
+                Resource:
+                  - !Ref GitHubConnection
+              - Effect: Allow
+                Action:
+                  - s3:GetObject*
+                  - s3:PutObject*
+                Resource:
+                  - !Sub "${ArtifactBucket.Arn}/*"
+
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      ArtifactStore:
+        Location: !Ref ArtifactBucket
+        Type: S3
+      RoleArn: !GetAtt PipelineRole.Arn
+      Stages:
+        - Name: GitHub
+          Actions:
+            - Name: PushToMaster
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeStarSourceConnection
+                Version: '1'
+              InputArtifacts: []
+              OutputArtifacts:
+                - Name: Source
+              Configuration: 
+                ConnectionArn: !Ref GitHubConnection
+                FullRepositoryId: otterley/nodejs-demoapp
+                BranchName: master
+                OutputArtifactFormat: CODEBUILD_CLONE_REF
+        - Name: BuildImage
+          Actions:
+          - Name: BuildArm64Image
+            ActionTypeId:
+              Category: Build
+              Owner: AWS
+              Provider: CodeBuild
+              Version: '1'
+            Configuration:
+              ProjectName: !Ref Arm64CodeBuildProject
+              PrimarySource: Source
+            InputArtifacts:
+              - Name: Source
+          - Name: BuildX86Image
+            ActionTypeId:
+              Category: Build
+              Owner: AWS
+              Provider: CodeBuild
+              Version: '1'
+            Configuration:
+              ProjectName: !Ref X86CodeBuildProject
+              PrimarySource: Source
+            InputArtifacts:
+              - Name: Source
+          
