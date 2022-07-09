@@ -10,6 +10,11 @@ Resources:
           - Status: Enabled
             ExpirationInDays: 1
 
+  # NOTE: After creating this stack, you must visit
+  # https://console.aws.amazon.com/codesuite/settings/connections
+  # in your browser to finalize the connection to GitHub.
+  # See https://docs.aws.amazon.com/dtconsole/latest/userguide/connections-update.html
+  # for more information.
   GitHubConnection:
     Type: 'AWS::CodeStarConnections::Connection'
     Properties:
@@ -68,7 +73,6 @@ Resources:
                     - !Ref GitHubConnection
                 - Effect: Allow
                   Action:
-                    - ecr:GetAuthorizationToken
                     - ecr:BatchGetImage
                     - ecr:BatchCheckLayerAvailability
                     - ecr:CompleteLayerUpload
@@ -78,6 +82,11 @@ Resources:
                     - ecr:UploadLayerPart
                   Resource:
                     - !GetAtt ImageRepo.Arn
+                - Effect: Allow
+                  Action:
+                    - ecr:GetAuthorizationToken
+                  Resource:
+                    - "*"
 
   Arm64CodeBuildProject:
     Type: AWS::CodeBuild::Project
