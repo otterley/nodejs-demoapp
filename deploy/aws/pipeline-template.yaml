@@ -4,6 +4,7 @@ Description: Build pipeline for nodejs-demoapp
 Resources:
   ArtifactBucket:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
     Properties:
       LifecycleConfiguration:
         Rules:
@@ -12,7 +13,7 @@ Resources:
 
   # NOTE: After creating this stack, you must visit
   # https://console.aws.amazon.com/codesuite/settings/connections
-  # in your browser to finalize the connection to GitHub.
+  # in your browser to complete the connection to GitHub.
   # See https://docs.aws.amazon.com/dtconsole/latest/userguide/connections-update.html
   # for more information.
   GitHubConnection:
@@ -23,6 +24,7 @@ Resources:
 
   ImageRepo:
     Type: AWS::ECR::Repository
+    DeletionPolicy: Retain
     Properties:
       RepositoryName: nodejs-demoapp
 
@@ -110,6 +112,19 @@ Resources:
       ServiceRole: !Ref CodeBuildRole
       Source:
         Type: CODEPIPELINE
+        BuildSpec: |-
+          version: 0.2
+          env:
+            shell: bash
+          phases:
+            pre_build:
+              commands:
+                aws ecr get-login-password | docker login -u AWS --password-stdin $IMAGE_REG
+            build:
+              on-failure: ABORT
+              commands:
+                - make image
+                - make push
       Artifacts:
         Type: CODEPIPELINE
       LogsConfig:
@@ -133,6 +148,19 @@ Resources:
       ServiceRole: !Ref CodeBuildRole
       Source:
         Type: CODEPIPELINE
+        BuildSpec: |-
+          version: 0.2
+          env:
+            shell: bash
+          phases:
+            pre_build:
+              commands:
+                aws ecr get-login-password | docker login -u AWS --password-stdin $IMAGE_REG
+            build:
+              on-failure: ABORT
+              commands:
+                - make image
+                - make push
       Artifacts:
         Type: CODEPIPELINE
       LogsConfig:
@@ -199,6 +227,7 @@ Resources:
                 Resource:
                   - !GetAtt Arm64CodeBuildProject.Arn
                   - !GetAtt X86CodeBuildProject.Arn
+                  - !GetAtt ManifestBuilder.Arn
               - Effect: Allow
                 Action:
                   - codestar-connections:UseConnection
