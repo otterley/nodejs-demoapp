@@ -11,7 +11,7 @@ IMAGE_TAG ?= latest$(if $(IMAGE_SUFFIX),-$(IMAGE_SUFFIX),)
 IMAGE_TAG_FULL := $(IMAGE_REG)/$(IMAGE_REPO):$(IMAGE_TAG)
 
 # Used by `multiarch-*` targets
-PLATFORMS ?= linux/arm6q4,linux/amd64
+PLATFORMS ?= linux/arm64,linux/amd64
 
 # Used by `test-api` target
 TEST_HOST ?= localhost:3000
