@@ -4,17 +4,8 @@ env:
   shell: bash
 
 phases:
-  install:
-    commands:
-      - docker version
-      - if [ "$(uname -m)" = "aarch64" ]; then arch=arm64; else arch=amd64; fi
-      - curl -JLO https://github.com/docker/buildx/releases/download/v0.8.2/buildx-v0.8.2.linux-${arch}
-      - mkdir -p ~/.docker/cli-plugins
-      - mv buildx-v0.8.2.linux-${arch} ~/.docker/cli-plugins/docker-buildx
-      - chmod a+rx ~/.docker/cli-plugins/docker-buildx
-      - docker run --privileged --rm tonistiigi/binfmt --install all
-      - docker buildx create --name multiarch --use
   build:
     on-failure: ABORT
     commands:
-      - make multiarch-push
+      - make image
+      - make push
