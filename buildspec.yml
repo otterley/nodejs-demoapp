@@ -13,6 +13,7 @@ phases:
       - mv buildx-v0.8.2.linux-${arch} ~/.docker/cli-plugins/docker-buildx
       - chmod a+rx ~/.docker/cli-plugins/docker-buildx
       - docker run --privileged --rm tonistiigi/binfmt --install all
+      - docker buildx create --name multiarch --use
   build:
     on-failure: ABORT
     commands:
