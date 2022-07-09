@@ -85,6 +85,7 @@ Resources:
         Type: ARM_CONTAINER
         Image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
         ComputeType: BUILD_GENERAL1_SMALL
+        PrivilegedMode: true
       ServiceRole: !Ref CodeBuildRole
       Source:
         Type: CODEPIPELINE
@@ -102,6 +103,7 @@ Resources:
         Type: LINUX_CONTAINER
         Image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
         ComputeType: BUILD_GENERAL1_SMALL
+        PrivilegedMode: true
       ServiceRole: !Ref CodeBuildRole
       Source:
         Type: CODEPIPELINE
