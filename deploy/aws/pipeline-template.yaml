@@ -68,6 +68,7 @@ Resources:
                     - !Ref GitHubConnection
                 - Effect: Allow
                   Action:
+                    - ecr:GetAuthorizationToken
                     - ecr:BatchGetImage
                     - ecr:BatchCheckLayerAvailability
                     - ecr:CompleteLayerUpload
