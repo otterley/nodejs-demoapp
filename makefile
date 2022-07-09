@@ -7,10 +7,11 @@ AWS_STACK_NAME ?= nodejs-demoapp
 # Used by `image`, `push` & `deploy` targets, override as required
 IMAGE_REG ?= $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
 IMAGE_REPO ?= nodejs-demoapp
-IMAGE_TAG ?= latest
+IMAGE_TAG ?= latest$(if $(IMAGE_SUFFIX),-$(IMAGE_SUFFIX),)
+IMAGE_TAG_FULL := $(IMAGE_REG)/$(IMAGE_REPO):$(IMAGE_TAG)
 
 # Used by `multiarch-*` targets
-PLATFORMS ?= linux/arm64,linux/amd64
+PLATFORMS ?= linux/arm6q4,linux/amd64
 
 # Used by `test-api` target
 TEST_HOST ?= localhost:3000
@@ -25,33 +26,33 @@ REPO_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 help: ## 💬 This help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-lint: $(SRC_DIR)/node_modules ## 🔎 Lint & format, will not fix but sets exit code on error 
+lint: $(SRC_DIR)/node_modules ## 🔎 Lint & format, will not fix but sets exit code on error
 	cd $(SRC_DIR); npm run lint
 
 lint-fix: $(SRC_DIR)/node_modules ## 📜 Lint & format, will try to fix errors and modify code
 	cd $(SRC_DIR); npm run lint-fix
 
-image: ## 🔨 Build container image from Dockerfile 
+image: ## 🔨 Build container image from Dockerfile
 	docker build . --file build/Dockerfile \
-	--tag $(IMAGE_REG)/$(IMAGE_REPO):$(IMAGE_TAG)
+	--tag $(IMAGE_TAG_FULL)
 
-push: ## 📤 Push container image to registry 
-	docker push $(IMAGE_REG)/$(IMAGE_REPO):$(IMAGE_TAG)
+push: ## 📤 Push container image to registry
+	docker push $(IMAGE_TAG_FULL)
 
-multiarch-image: ## 🔨 Build multi-arch container image from Dockerfile 
+multiarch-image: ## 🔨 Build multi-arch container image from Dockerfile
 	docker buildx build . --file build/Dockerfile \
 	--platform $(PLATFORMS) \
-	--tag $(IMAGE_REG)/$(IMAGE_REPO):$(IMAGE_TAG)
+	--tag $(IMAGE_TAG_FULL)
 
-multiarch-push: ## 📤 Build and push multi-arch container image to registry 
+multiarch-push: ## 📤 Build and push multi-arch container image to registry
 	docker buildx build . --file build/Dockerfile \
 	--platform $(PLATFORMS) \
-	--tag $(IMAGE_REG)/$(IMAGE_REPO):$(IMAGE_TAG) \
+	--tag $(IMAGE_TAG_FULL) \
 	--push
 
 run: $(SRC_DIR)/node_modules ## 🏃 Run locally using Node.js
 	cd $(SRC_DIR); npm run watch
-	
+
 deploy: ## 🚀 Deploy to Amazon ECS
 	aws cloudformation deploy \
 	  --capabilities CAPABILITY_IAM \
@@ -60,10 +61,10 @@ deploy: ## 🚀 Deploy to Amazon ECS
 	  --parameter-overrides AvailabilityZones=$(AWS_AVAILABILITY_ZONES) \
 	                        CreateNATGateways=false \
 							CreatePrivateSubnets=false \
-							Image=$(IMAGE_REG)/$(IMAGE_REPO):$(IMAGE_TAG)
+							Image=$(IMAGE_TAG_FULL)
 	@echo "### 🚀 App deployed & available here: http://`aws cloudformation describe-stacks --stack-name $(AWS_STACK_NAME) --query 'Stacks[0].Outputs[?OutputKey==\`AlbDnsUrl\`].OutputValue' --output text`"
 
-undeploy: ## 💀 Remove from AWS 
+undeploy: ## 💀 Remove from AWS
 	@echo "### WARNING! Going to delete $(AWS_STACK_NAME) 😲"
 	aws cloudformation delete-stack --stack-name $(AWS_STACK_NAME)
 	aws cloudformation wait stack-delete-complete --stack-name $(AWS_STACK_NAME)
@@ -71,11 +72,11 @@ undeploy: ## 💀 Remove from AWS
 test: $(SRC_DIR)/node_modules ## 🎯 Unit tests with Mocha
 	cd $(SRC_DIR); npm run test
 
-test-report: $(SRC_DIR)/node_modules ## 🤡 Unit tests with Mocha & mochawesome report 
+test-report: $(SRC_DIR)/node_modules ## 🤡 Unit tests with Mocha & mochawesome report
 	rm -rf $(SRC_DIR)/test-results.*
 	cd $(SRC_DIR); npm run test-report
 
-test-api: $(SRC_DIR)/node_modules .EXPORT_ALL_VARIABLES ## 🚦 Run integration API tests, server must be running 
+test-api: $(SRC_DIR)/node_modules .EXPORT_ALL_VARIABLES ## 🚦 Run integration API tests, server must be running
 	cd $(SRC_DIR); npm run test-postman
 
 clean: ## 🧹 Clean up project
@@ -88,5 +89,5 @@ $(SRC_DIR)/node_modules: $(SRC_DIR)/package.json
 	cd $(SRC_DIR); npm install --silent
 	touch -m $(SRC_DIR)/node_modules
 
-$(SRC_DIR)/package.json: 
+$(SRC_DIR)/package.json:
 	@echo "package.json was modified"

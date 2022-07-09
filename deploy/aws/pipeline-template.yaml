@@ -9,13 +9,13 @@ Resources:
         Rules:
           - Status: Enabled
             ExpirationInDays: 1
-  
+
   GitHubConnection:
     Type: 'AWS::CodeStarConnections::Connection'
     Properties:
       ConnectionName: GitHub
       ProviderType: GitHub
-  
+
   ImageRepo:
     Type: AWS::ECR::Repository
     Properties:
@@ -25,7 +25,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-  
+
   X86BuildLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -77,7 +77,7 @@ Resources:
                     - ecr:UploadLayerPart
                   Resource:
                     - !GetAtt ImageRepo.Arn
-                
+
   Arm64CodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
@@ -86,6 +86,11 @@ Resources:
         Image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
         ComputeType: BUILD_GENERAL1_SMALL
         PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: IMAGE_REG
+            Value: !Ref ImageRepo
+          - Name: IMAGE_SUFFIX
+            Value: arm64
       ServiceRole: !Ref CodeBuildRole
       Source:
         Type: CODEPIPELINE
@@ -95,7 +100,7 @@ Resources:
         CloudWatchLogs:
           Status: ENABLED
           GroupName: !Ref Arm64BuildLogGroup
-    
+
   X86CodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
@@ -104,6 +109,11 @@ Resources:
         Image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
         ComputeType: BUILD_GENERAL1_SMALL
         PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: IMAGE_REG
+            Value: !Ref ImageRepo
+          - Name: IMAGE_SUFFIX
+            Value: x86
       ServiceRole: !Ref CodeBuildRole
       Source:
         Type: CODEPIPELINE
@@ -169,7 +179,7 @@ Resources:
               InputArtifacts: []
               OutputArtifacts:
                 - Name: Source
-              Configuration: 
+              Configuration:
                 ConnectionArn: !Ref GitHubConnection
                 FullRepositoryId: otterley/nodejs-demoapp
                 BranchName: master
@@ -198,4 +208,3 @@ Resources:
               PrimarySource: Source
             InputArtifacts:
               - Name: Source
-          

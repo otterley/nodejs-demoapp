@@ -4,6 +4,9 @@ env:
   shell: bash
 
 phases:
+  pre_build:
+    commands:
+      aws ecr get-login-password | docker login -u AWS --password-stdin $IMAGE_REG
   build:
     on-failure: ABORT
     commands:
