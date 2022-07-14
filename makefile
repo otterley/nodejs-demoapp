@@ -59,15 +59,17 @@ run: $(SRC_DIR)/node_modules ## 🏃 Run locally using Node.js
 	cd $(SRC_DIR); npm run watch
 
 deploy: ## 🚀 Deploy to Amazon ECS
-	aws cloudformation deploy \
-	  --capabilities CAPABILITY_IAM \
-	  --template-file $(REPO_DIR)/deploy/aws/ecs-service.yaml \
-	  --stack-name $(AWS_STACK_NAME) \
-	  --parameter-overrides AvailabilityZones=$(AWS_AVAILABILITY_ZONES) \
-	                        CreateNATGateways=false \
-							CreatePrivateSubnets=false \
-							Image=$(IMAGE_TAG_FULL)
-	@echo "### 🚀 App deployed & available here: http://`aws cloudformation describe-stacks --stack-name $(AWS_STACK_NAME) --query 'Stacks[0].Outputs[?OutputKey==\`AlbDnsUrl\`].OutputValue' --output text`"
+	@true
+
+# aws cloudformation deploy \
+#   --capabilities CAPABILITY_IAM \
+#   --template-file $(REPO_DIR)/deploy/aws/ecs-service.yaml \
+#   --stack-name $(AWS_STACK_NAME) \
+#   --parameter-overrides AvailabilityZones=$(AWS_AVAILABILITY_ZONES) \
+#                         CreateNATGateways=false \
+# 						CreatePrivateSubnets=false \
+# 						Image=$(IMAGE_TAG_FULL)
+# @echo "### 🚀 App deployed & available here: http://`aws cloudformation describe-stacks --stack-name $(AWS_STACK_NAME) --query 'Stacks[0].Outputs[?OutputKey==\`AlbDnsUrl\`].OutputValue' --output text`"
 
 undeploy: ## 💀 Remove from AWS
 	@echo "### WARNING! Going to delete $(AWS_STACK_NAME) 😲"
