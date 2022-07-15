@@ -156,6 +156,12 @@ Parameters:
     Default: 10.0.0.0/16
     Description: CIDR block for the VPC
     Type: String
+  ClusterName:
+    Type: String
+    Default: ''
+  ServiceName:
+    Type: String
+    Default: ''
   Image:
     Type: String
   DesiredCapacity:
@@ -173,15 +179,15 @@ Parameters:
     AllowedValues:
       - arm64
       - amd64
-  AmiIdAmd64: 
+  AmiIdAmd64:
     Description: AMI ID
     Default: '{{resolve:ssm:/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id:90}}'
     Type: String
-  AmiIdArm64: 
+  AmiIdArm64:
     Description: Arm64 AMI ID
     Default: '{{resolve:ssm:/aws/service/ecs/optimized-ami/amazon-linux-2/arm64/recommended/image_id:89}}'
     Type: String
-  
+
 Rules:
   NAT:
     RuleCondition: !Equals [!Ref CreateNATGateways, 'true']
@@ -229,6 +235,8 @@ Conditions:
   PublicSubnetTag3Condition: !Not [!Equals [!Ref 'PublicSubnetTag3', '']]
   Arm64Condition: !Equals [!Ref CPUArchitecture, 'arm64']
   Amd64Condition: !Equals [!Ref CPUArchitecture, 'amd64']
+  HasClusterNameCondition: !Equals [!Ref ClusterName, '']
+  HasServiceNameCondition: !Equals [!Ref ServiceName, '']
 
 Mappings:
   ArchitectureToInstanceType:
@@ -607,8 +615,11 @@ Resources:
           Value: NATGateway3
 
 
-  ECSCluster:
+  EcsCluster:
     Type: 'AWS::ECS::Cluster'
+    Properties:
+      ClusterName:
+        !If [HasClusterNameCondition, ClusterName, AWS::NoValue]
   EcsSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
@@ -641,7 +652,7 @@ Resources:
   CloudwatchLogsGroup:
     Type: 'AWS::Logs::LogGroup'
     Properties:
-      LogGroupName: !Join 
+      LogGroupName: !Join
         - '-'
         - - ECSLogGroup
           - !Ref 'AWS::StackName'
@@ -649,7 +660,7 @@ Resources:
   TaskDefinition:
     Type: 'AWS::ECS::TaskDefinition'
     Properties:
-      Family: !Join 
+      Family: !Join
         - ''
         - - !Ref 'AWS::StackName'
           - '-nodejs-demoapp'
@@ -730,7 +741,7 @@ Resources:
         Timeout: PT15M
     UpdatePolicy:
       AutoScalingReplacingUpdate:
-        WillReplace: 'true'
+        WillReplace: true
   ContainerInstances:
     Type: 'AWS::AutoScaling::LaunchConfiguration'
     Properties:
@@ -739,13 +750,13 @@ Resources:
         - !Ref EcsSecurityGroup
       InstanceType: !FindInMap [ArchitectureToInstanceType, !Ref CPUArchitecture, InstanceType]
       IamInstanceProfile: !Ref EC2InstanceProfile
-      UserData: !Base64 
+      UserData: !Base64
         'Fn::Join':
           - ''
           - - |
               #!/bin/bash -xe
             - echo ECS_CLUSTER=
-            - !Ref ECSCluster
+            - !Ref EcsCluster
             - |2
                >> /etc/ecs/ecs.config
             - |
@@ -762,7 +773,8 @@ Resources:
     Type: 'AWS::ECS::Service'
     DependsOn: ALBListener
     Properties:
-      Cluster: !Ref ECSCluster
+      Cluster: !Ref EcsCluster
+      ServiceName: !If [HasServiceNameCondition, ServiceName, AWS::NoValue]
       DesiredCount: '1'
       LoadBalancers:
         - ContainerName: nodejs-demoapp
@@ -839,12 +851,12 @@ Outputs:
   Service:
     Value: !Ref Service
   Cluster:
-    Value: !Ref ECSCluster
+    Value: !Ref EcsCluster
   AlbDnsUrl:
     Description: Your ALB DNS URL
-    Value: !Join 
+    Value: !Join
       - ''
-      - - !GetAtt 
+      - - !GetAtt
           - ECSALB
           - DNSName
   TaskDefinition:
@@ -920,7 +932,7 @@ Outputs:
     Value: !Ref 'PrivateSubnet2ARouteTable'
     Description: Private subnet 2A route table
     Export:
-      Name: !Sub '${AWS::StackName}-PrivateSubnet2ARouteTable'  
+      Name: !Sub '${AWS::StackName}-PrivateSubnet2ARouteTable'
   PrivateSubnet3ACIDR:
     Condition: PrivateSubnets&3AZCondition
     Description: Private subnet 3A CIDR in Availability Zone 3
