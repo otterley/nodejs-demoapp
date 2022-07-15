@@ -12,5 +12,3 @@ Resources:
       BuildAndPushImageCommand: "make image && make push"
       BuildAndPushManifestCommand: "make multiarch-manifest"
       DeployCommand: "make deploy"
-      ClusterName: default
-      ServiceName: nodejs-demoapp
