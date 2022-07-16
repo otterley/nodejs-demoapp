@@ -65,7 +65,7 @@
               "});",
               "",
               "pm.test(\"Info Page: Check content\", function () {",
-              "    pm.expect(pm.response.text()).to.include('Intel');",
+              "    pm.expect(pm.response.text()).to.include('Hostname');",
               "});",
               ""
             ],
@@ -85,50 +85,6 @@
           "protocol": "http",
           "host": ["{{apphost}}"],
           "path": ["info"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Check Weather API",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "id": "e1f514e2-fc14-4fcd-a140-50b3fc9f5a56",
-            "exec": [
-              "pm.test(\"Weather API: Successful GET request\", function () {",
-              "    pm.response.to.be.ok;",
-              "});",
-              "",
-              "pm.test(\"Weather API: Response valid & JSON body\", function () {",
-              "    pm.response.to.be.withBody;",
-              "    pm.response.to.be.json;",
-              "});",
-              "",
-              "pm.test(\"Weather API: Check API response\", function () {",
-              "    var weatherData = pm.response.json();",
-              "    pm.expect(weatherData.main.temp).to.be.an('number')",
-              "    pm.expect(weatherData.weather[0]).to.exist;",
-              "});",
-              ""
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
-      "request": {
-        "method": "GET",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": ""
-        },
-        "url": {
-          "raw": "http://{{apphost}}/api/weather/51.40329/0.05619",
-          "protocol": "http",
-          "host": ["{{apphost}}"],
-          "path": ["api", "weather", "51.40329", "0.05619"]
         }
       },
       "response": []

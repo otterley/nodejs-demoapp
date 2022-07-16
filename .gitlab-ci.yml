@@ -1,0 +1,58 @@
+variables:
+  KUBERNETES_MEMORY_REQUEST: 1Gi
+  KUBERNETES_CPU_REQUEST: 1
+
+stages:          # List of stages for jobs, and their order of execution
+  - build
+  - test
+  - pre-deploy
+  # - deploy
+
+build-job:       # This job runs in the build stage, which runs first.
+  stage: build
+  tags: [$BUILD_ARCH]
+  parallel:
+    matrix:
+    - BUILD_ARCH: amd64
+    - BUILD_ARCH: arm64
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+    - >-
+      /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}-${BUILD_ARCH}"
+
+
+test-job:   # This job runs in the test stage.
+  stage: test    # It only starts when the job in the build stage completes successfully.
+  tags: [$BUILD_ARCH]
+  parallel:
+    matrix:
+    - BUILD_ARCH: amd64
+    - BUILD_ARCH: arm64
+  image:
+    name: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}-${BUILD_ARCH}
+  script:
+    - make test-api
+
+
+create-manifest-job:
+  stage: pre-deploy
+  tags: [arm64]
+  image: public.ecr.aws/docker/library/fedora:36
+  script:
+    - yum -y install podman
+    - echo "${CI_REGISTRY_PASSWORD}" | podman login -u "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"
+    - COMPOSITE_IMAGE=${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}
+    - podman manifest create ${COMPOSITE_IMAGE}
+    - >-
+      for arch in arm64 amd64; do
+        podman manifest add ${COMPOSITE_IMAGE} docker://${COMPOSITE_IMAGE}-${arch};
+      done
+    - podman manifest inspect ${COMPOSITE_IMAGE}
+    - podman manifest push ${COMPOSITE_IMAGE} docker://${COMPOSITE_IMAGE}
