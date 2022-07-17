@@ -26,6 +26,7 @@ build-job:       # This job runs in the build stage, which runs first.
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
       --destination "${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}-${BUILD_ARCH}"
+      --dockerfile build/Dockerfile
 
 
 test-job:   # This job runs in the test stage.
