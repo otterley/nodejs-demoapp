@@ -88,7 +88,7 @@ test-report: $(SRC_DIR)/node_modules ## 🤡 Unit tests with Mocha & mochawesome
 test-api: $(SRC_DIR)/node_modules .EXPORT_ALL_VARIABLES ## 🚦 Run integration API tests, server must be running
 	cd $(SRC_DIR); npm run test-postman
 
-test-container: .EXPORT_ALL_VARIABLES
+test-container: .ONESHELL .EXPORT_ALL_VARIABLES
 	cd /app
 	npm install --production=false
 	npm start &
