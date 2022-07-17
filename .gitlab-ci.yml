@@ -40,8 +40,9 @@ test-job:   # This job runs in the test stage.
     name: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}-${BUILD_ARCH}
   script:
     - cd /app
+    - npm install --production=false
     - npm start &
-    - sleep 5
+    - sleep 1
     - npm run test-postman
 
 
