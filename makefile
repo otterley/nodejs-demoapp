@@ -20,7 +20,7 @@ TEST_HOST ?= localhost:3000
 SRC_DIR := src
 REPO_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-.PHONY: help lint lint-fix image push run multiarch-image multiarch-push multiarch-manifest deploy undeploy clean test test-api test-report test-container .ONESHELL .EXPORT_ALL_VARIABLES
+.PHONY: help lint lint-fix image push run multiarch-image multiarch-push multiarch-manifest deploy undeploy clean test test-api test-report test-container .EXPORT_ALL_VARIABLES
 .DEFAULT_GOAL := help
 
 help: ## 💬 This help message
@@ -88,12 +88,10 @@ test-report: $(SRC_DIR)/node_modules ## 🤡 Unit tests with Mocha & mochawesome
 test-api: $(SRC_DIR)/node_modules .EXPORT_ALL_VARIABLES ## 🚦 Run integration API tests, server must be running
 	cd $(SRC_DIR); npm run test-postman
 
-test-container: .ONESHELL .EXPORT_ALL_VARIABLES
-	cd /app
-	npm install --production=false
-	npm start &
+test-container: .EXPORT_ALL_VARIABLES ## 🚦 Run integration API tests in container
+	cd /app && npm install --production=false && npm start &
 	until nc -z $${TEST_HOST%%:*} $${TEST_HOST##*:}; do sleep 1; done
-	npm run test-postman
+	cd /app && npm run test-postman
 
 clean: ## 🧹 Clean up project
 	rm -rf $(SRC_DIR)/node_modules
