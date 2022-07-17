@@ -90,9 +90,9 @@ test-api: $(SRC_DIR)/node_modules .EXPORT_ALL_VARIABLES ## 🚦 Run integration 
 	cd $(SRC_DIR); npm run test-postman
 
 test-container: .EXPORT_ALL_VARIABLES ## 🚦 Run integration API tests in container
-	cd $(CONTAINER_BASEDIR) && npm install --production=false && npm start & \
-		until nc -z $${TEST_HOST%%:*} $${TEST_HOST##*:}; do sleep 1; done; \
-		npm run test-postman
+	cd $(CONTAINER_BASEDIR) && npm install --production=false && npm start &
+	until nc -z $${TEST_HOST%%:*} $${TEST_HOST##*:}; do sleep 1; done
+	cd $(CONTAINER_BASEDIR) && npm run test-postman
 
 clean: ## 🧹 Clean up project
 	rm -rf $(SRC_DIR)/node_modules
