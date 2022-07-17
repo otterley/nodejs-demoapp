@@ -20,7 +20,7 @@ TEST_HOST ?= localhost:3000
 SRC_DIR := src
 REPO_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-.PHONY: help lint lint-fix image push run multiarch-image multiarch-push multiarch-manifest deploy undeploy clean test test-api test-report test-container .EXPORT_ALL_VARIABLES
+.PHONY: help lint lint-fix image push run multiarch-image multiarch-push multiarch-manifest deploy undeploy clean test test-api test-report test-container .ONESHELL .EXPORT_ALL_VARIABLES
 .DEFAULT_GOAL := help
 
 help: ## 💬 This help message
