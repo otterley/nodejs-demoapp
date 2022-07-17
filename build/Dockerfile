@@ -6,6 +6,9 @@ LABEL org.opencontainers.image.source = "https://github.com/benc-uk/nodejs-demoa
 ENV NODE_ENV production
 WORKDIR /app
 
+# For running tests
+RUN apk add --no-cache make
+
 # For Docker layer caching do this BEFORE copying in rest of app
 COPY src/package*.json ./
 RUN npm install --production --silent
