@@ -12,4 +12,3 @@ LICENSE
 **/.eslintrc.js
 **/mochawesome-report/
 **/node_modules
-**/tests/*
