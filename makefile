@@ -19,6 +19,7 @@ TEST_HOST ?= localhost:3000
 # Don't change
 SRC_DIR := src
 REPO_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+CONTAINER_BASEDIR := /app
 
 .PHONY: help lint lint-fix image push run multiarch-image multiarch-push multiarch-manifest deploy undeploy clean test test-api test-report test-container .EXPORT_ALL_VARIABLES
 .DEFAULT_GOAL := help
@@ -89,9 +90,9 @@ test-api: $(SRC_DIR)/node_modules .EXPORT_ALL_VARIABLES ## 🚦 Run integration 
 	cd $(SRC_DIR); npm run test-postman
 
 test-container: .EXPORT_ALL_VARIABLES ## 🚦 Run integration API tests in container
-	cd /app && npm install --production=false && npm start &
-	until nc -z $${TEST_HOST%%:*} $${TEST_HOST##*:}; do sleep 1; done
-	cd /app && npm run test-postman
+	cd $(CONTAINER_BASEDIR) && npm install --production=false && npm start & \
+		until nc -z $${TEST_HOST%%:*} $${TEST_HOST##*:}; do sleep 1; done; \
+		npm run test-postman
 
 clean: ## 🧹 Clean up project
 	rm -rf $(SRC_DIR)/node_modules
