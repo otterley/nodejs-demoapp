@@ -40,7 +40,8 @@ test-job:   # This job runs in the test stage.
     name: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}-${BUILD_ARCH}
   script:
     - npm start &
-    - make test-api
+    - sleep 5
+    - npm run test-postman
 
 
 create-manifest-job:
