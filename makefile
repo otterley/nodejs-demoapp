@@ -61,7 +61,6 @@ run: $(SRC_DIR)/node_modules ## 🏃 Run locally using Node.js
 
 deploy: ## 🚀 Deploy to Amazon ECS
 	aws cloudformation deploy \
-		--debug \
 		$(if $(CLOUDFORMATION_ROLE_ARN),--role-arn $(CLOUDFORMATION_ROLE_ARN),) \
 		--capabilities CAPABILITY_IAM \
 		--template-file $(REPO_DIR)/deploy/aws/ecs-service.yaml \
@@ -72,8 +71,7 @@ deploy: ## 🚀 Deploy to Amazon ECS
 			AvailabilityZones=$(AWS_AVAILABILITY_ZONES) \
 			CreateNATGateways=false \
 			CreatePrivateSubnets=false \
-			Image=$(IMAGE_TAG_FULL); echo "exit status: $$?"
-
+			Image=$(IMAGE_TAG_FULL)
 	@echo "### 🚀 App deployed & available here: http://`aws cloudformation describe-stacks --stack-name $(AWS_STACK_NAME) --query 'Stacks[0].Outputs[?OutputKey==\`AlbDnsUrl\`].OutputValue' --output text`"
 
 undeploy: ## 💀 Remove from AWS
