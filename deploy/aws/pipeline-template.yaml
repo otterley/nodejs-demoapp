@@ -9,6 +9,6 @@ Resources:
       BranchName: master
       ImageRepositoryName: nodejs-demoapp
       CodeStarConnectionArn: arn:aws:codestar-connections:us-west-2:523443631803:connection/aafa4a94-2aed-40b0-a3bb-fc33d238a5f0
-      BuildAndPushImageCommand: "make image && make push"
-      BuildAndPushManifestCommand: "make multiarch-manifest"
-      DeployCommand: "make deploy"
+      BuildAndPushImageBuildspecPath: buildspec.yml
+      BuildAndPushManifestBuildspecPath: buildspec-manifest.yml
+      DeployBuildspecPath: buildspec-deploy.yml
