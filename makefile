@@ -61,6 +61,7 @@ run: $(SRC_DIR)/node_modules ## 🏃 Run locally using Node.js
 
 deploy: ## 🚀 Deploy to Amazon ECS
 	aws cloudformation deploy \
+		--debug \
 		$(if $(CLOUDFORMATION_ROLE_ARN),--role-arn $(CLOUDFORMATION_ROLE_ARN),) \
 		--capabilities CAPABILITY_IAM \
 		--template-file $(REPO_DIR)/deploy/aws/ecs-service.yaml \
