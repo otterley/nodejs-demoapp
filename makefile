@@ -71,7 +71,7 @@ deploy: ## 🚀 Deploy to Amazon ECS
 			AvailabilityZones=$(AWS_AVAILABILITY_ZONES) \
 			CreateNATGateways=false \
 			CreatePrivateSubnets=false \
-			Image=$(IMAGE_TAG_FULL); echo "exit status: $?"
+			Image=$(IMAGE_TAG_FULL); echo "exit status: $$?"
 
 	@echo "### 🚀 App deployed & available here: http://`aws cloudformation describe-stacks --stack-name $(AWS_STACK_NAME) --query 'Stacks[0].Outputs[?OutputKey==\`AlbDnsUrl\`].OutputValue' --output text`"
 
