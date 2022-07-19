@@ -123,6 +123,13 @@ Parameters:
   ServiceName:
     Type: String
     Default: ''
+  CreateService:
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'true'
+    Description: Set to true to create the ECS service. Set this to false when initially setting up the cluster.
+    Type: String
   Image:
     Type: String
   DesiredCapacity:
@@ -147,13 +154,6 @@ Parameters:
   AmiIdArm64:
     Description: Arm64 AMI ID
     Default: '{{resolve:ssm:/aws/service/ecs/optimized-ami/amazon-linux-2/arm64/recommended/image_id:89}}'
-    Type: String
-  CreateService:
-    AllowedValues:
-      - 'true'
-      - 'false'
-    Default: 'true'
-    Description: Set to true to create the ECS service. Set this to false when initially setting up the cluster.
     Type: String
 
 Rules:
